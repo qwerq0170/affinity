@@ -3,35 +3,60 @@
 <head>
 <meta charset="utf-8">
 <title>Seamless CSS-only animation demo</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes">
 <style>
   :root{
     --delay:.15s;
     --dur:.9s;
     --ease:cubic-bezier(.4,0,.2,1);
+    --card-width:260px;
+    --card-height:340px;
+    --gap-size:2rem;
   }
-  *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f7fa;overflow:hidden}
-  .hero{width:90%;max-width:1200px;text-align:center}
+  
+  /* Mobile-first responsive scaling */
+  @media (max-width: 768px) {
+    :root {
+      --card-width: 200px;
+      --card-height: 260px;
+      --gap-size: 1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    :root {
+      --card-width: 160px;
+      --card-height: 210px;
+      --gap-size: 0.5rem;
+    }
+  }
+  
+  *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f7fa;overflow:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  .hero{width:90%;max-width:1200px;text-align:center;padding:1rem}
   .hero>*{opacity:0;transform:translateY(40px);animation:fadeUp var(--dur) var(--ease) forwards}
-  h1{font-size:clamp(2.5rem,5vw,4rem);font-weight:700;color:#111}
-  p{font-size:1.25rem;color:#444;margin:.5em 0 1.2em}
+  h1{font-size:clamp(2rem,5vw,4rem);font-weight:700;color:#111;line-height:1.2}
+  p{font-size:clamp(1rem,2.5vw,1.25rem);color:#444;margin:.5em 0 1.2em}
   h1{animation-delay:calc(var(--delay)*1)}
   p{animation-delay:calc(var(--delay)*2)}
   
   .cards-container{
     display:flex;
     justify-content:center;
-    gap:2rem;
+    gap:var(--gap-size);
     margin:2.5rem auto;
     animation-delay:calc(var(--delay)*3);
     flex-wrap:wrap;
+    width:100%;
+    max-width:100%;
   }
   
   .card-wrap{
     perspective:1200px;
-    width:260px;
-    height:340px;
+    -webkit-perspective:1200px;
+    width:var(--card-width);
+    height:var(--card-height);
+    flex-shrink:0;
   }
   
   .card{
@@ -41,17 +66,34 @@
     border-radius:16px;
     box-shadow:0 25px 50px -12px rgba(0,0,0,.25);
     transform-style:preserve-3d;
+    -webkit-transform-style:preserve-3d;
     animation:rotateCard 8s linear infinite;
+    will-change:transform;
+    -webkit-perspective-backface-visibility:hidden;
+    backface-visibility:hidden;
+    transition:opacity 0.3s ease;
+  }
+  
+  /* Hardware acceleration */
+  .card::before {
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
   }
   
   @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
-  @keyframes rotateCard{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+  @keyframes rotateCard{
+    0%{transform:rotateY(0deg) translateZ(0)}
+    100%{transform:rotateY(360deg) translateZ(0)}
+  }
   
   .btn{
     display:inline-block;
     margin-top:1.5rem;
     padding:.9rem 2.2rem;
-    font-size:1.1rem;
+    font-size:clamp(1rem,2.5vw,1.1rem);
     font-weight:600;
     color:#fff;
     background:#111;
@@ -61,7 +103,17 @@
     overflow:hidden;
     animation-delay:calc(var(--delay)*4);
     user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    min-height:44px;
+    min-width:120px;
+    border:none;
+    transition:background-color .3s ease;
   }
+  
+  .btn:hover{background-color:#333}
+  .btn:active{background-color:#000}
   
   .btn::after{
     content:"";
@@ -84,6 +136,37 @@
     50%{transform:scale(1.1)}
     100%{transform:scale(1);opacity:1}
   }
+  
+  /* High DPI display optimizations */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .card {
+      image-rendering:-webkit-optimize-contrast;
+      image-rendering:crisp-edges;
+    }
+  }
+  
+  /* Landscape mobile mode */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .cards-container {
+      gap:1rem;
+      margin:1rem auto;
+    }
+    h1{font-size:clamp(1.5rem,4vw,2.5rem)}
+    p{margin:.3em 0 .8em}
+  }
+  
+  /* Reduced motion accessibility */
+  @media (prefers-reduced-motion: reduce) {
+     * {
+       animation-duration: 0.01ms !important;
+       animation-iteration-count: 1 !important;
+       transition-duration: 0.01ms !important;
+     }
+     .card {
+       animation: none !important;
+       transform: rotateY(0deg) !important;
+     }
+  }
 </style>
 </head>
 <body>
@@ -103,19 +186,18 @@
     </div>
   </div>
   
-  <span class="btn" role="button">Tap me</span>
+  <button class="btn">Tap me</button>
 </div>
 
 <script>
-  // JavaScript for random shuffle functionality
   document.addEventListener('DOMContentLoaded', function() {
     const button = document.querySelector('.btn');
     const cards = document.querySelectorAll('.card');
     
-    // Image pool: 1 bianca1.jpeg + 2 bianca2.jpeg + 3 bianca3.jpeg
+    // Updated image pool: three distinct bianca files
     const images = ['bianca1.jpeg', 'bianca2.jpeg', 'bianca3.jpeg'];
     
-    // Fisher-Yates shuffle algorithm
+    // Fisher-Yates shuffle
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -124,20 +206,38 @@
       return array;
     }
     
-    // Initialize cards with starting positions
+    // Initialize with first set
     cards.forEach((card, index) => {
       card.style.backgroundImage = `url("${images[index]}")`;
     });
     
+    // Handle click/touch with debouncing
+    let isProcessing = false;
     button.addEventListener('click', function() {
-      // Create a new shuffled array
+      if (isProcessing) return;
+      isProcessing = true;
+      setTimeout(() => { isProcessing = false; }, 400);
+      
       const shuffled = shuffle([...images]);
       
-      // Apply shuffled images to cards
       cards.forEach((card, index) => {
-        card.style.backgroundImage = `url("${shuffled[index]}")`;
+        // Fade transition for smooth swap
+        card.style.opacity = '0';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            card.style.backgroundImage = `url("${shuffled[index]}")`;
+            card.style.opacity = '1';
+          }, 150);
+        });
       });
     });
+    
+    // iOS Safari momentum scroll fix
+    document.addEventListener('touchmove', function(e) {
+      if (e.target.closest('.card-wrap')) {
+        e.preventDefault();
+      }
+    }, {passive: false});
   });
 </script>
 </body>
