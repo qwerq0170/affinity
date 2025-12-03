@@ -3,60 +3,120 @@
 <head>
 <meta charset="utf-8">
 <title>Seamless CSS-only animation demo</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,user-scalable=yes">
 <style>
   :root{
     --delay:.15s;
     --dur:.9s;
     --ease:cubic-bezier(.4,0,.2,1);
-    --card-width:260px;
-    --card-height:340px;
-    --gap-size:2rem;
+    --card-width:min(45vw, 280px); /* Dynamic sizing: 45% of viewport or 280px max */
+    --card-height:calc(var(--card-width) * 1.31); /* Maintain aspect ratio */
+    --gap-size:min(2vw, 1.5rem); /* Responsive gap */
   }
   
-  /* Mobile-first responsive scaling */
-  @media (max-width: 768px) {
+  /* Extra small phones (320px and below) */
+  @media (max-width: 360px) {
     :root {
-      --card-width: 200px;
-      --card-height: 260px;
-      --gap-size: 1rem;
+      --card-width: 140px;
     }
+    h1{font-size:1.8rem !important}
+    p{font-size:1rem !important}
   }
   
+  /* Small phones */
   @media (max-width: 480px) {
     :root {
-      --card-width: 160px;
-      --card-height: 210px;
-      --gap-size: 0.5rem;
+      --card-width: min(42vw, 180px);
+      --gap-size: 0.75rem;
     }
   }
   
-  *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f7fa;overflow:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch}
-  .hero{width:90%;max-width:1200px;text-align:center;padding:1rem}
-  .hero>*{opacity:0;transform:translateY(40px);animation:fadeUp var(--dur) var(--ease) forwards}
-  h1{font-size:clamp(2rem,5vw,4rem);font-weight:700;color:#111;line-height:1.2}
-  p{font-size:clamp(1rem,2.5vw,1.25rem);color:#444;margin:.5em 0 1.2em}
+  /* Tablets */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    :root {
+      --card-width: 220px;
+    }
+  }
+  
+  *{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif
+  }
+  
+  html{
+    overflow-x:hidden; /* Prevent horizontal scroll */
+    width:100%;
+    max-width:100vw;
+  }
+  
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f5f7fa;
+    overflow-x:hidden; /* Critical: hide overflow */
+    width:100%;
+    max-width:100vw;
+    touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;
+  }
+  
+  .hero{
+    width:95%; /* Slightly wider */
+    max-width:1200px;
+    text-align:center;
+    padding:1rem 0.5rem;
+    margin:0 auto;
+    overflow:hidden; /* Contain children */
+  }
+  
+  .hero>*{
+    opacity:0;
+    transform:translateY(40px);
+    animation:fadeUp var(--dur) var(--ease) forwards;
+  }
+  
+  h1{
+    font-size:clamp(1.8rem, 6vw, 4rem);
+    font-weight:700;
+    color:#111;
+    line-height:1.2;
+    word-wrap:break-word; /* Prevent overflow */
+  }
+  
+  p{
+    font-size:clamp(1rem, 3vw, 1.25rem);
+    color:#444;
+    margin:.5em auto 1.2em;
+    max-width:90%; /* Prevent text overflow */
+  }
+  
   h1{animation-delay:calc(var(--delay)*1)}
   p{animation-delay:calc(var(--delay)*2)}
   
   .cards-container{
     display:flex;
     justify-content:center;
+    align-items:center;
     gap:var(--gap-size);
-    margin:2.5rem auto;
+    margin:2rem auto;
     animation-delay:calc(var(--delay)*3);
     flex-wrap:wrap;
     width:100%;
-    max-width:100%;
+    max-width:100%; /* Ensure no overflow */
+    overflow:hidden;
   }
   
   .card-wrap{
-    perspective:1200px;
-    -webkit-perspective:1200px;
+    perspective:800px; /* Reduced for mobile */
+    -webkit-perspective:800px;
     width:var(--card-width);
     height:var(--card-height);
-    flex-shrink:0;
+    flex-shrink:1; /* Allow shrinking */
+    max-width:100%; /* Prevent overflow */
   }
   
   .card{
@@ -64,23 +124,14 @@
     height:100%;
     background:#fff center / contain no-repeat;
     border-radius:16px;
-    box-shadow:0 25px 50px -12px rgba(0,0,0,.25);
+    box-shadow:0 15px 30px -8px rgba(0,0,0,.25);
     transform-style:preserve-3d;
     -webkit-transform-style:preserve-3d;
     animation:rotateCard 8s linear infinite;
     will-change:transform;
-    -webkit-perspective-backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
     backface-visibility:hidden;
     transition:opacity 0.3s ease;
-  }
-  
-  /* Hardware acceleration */
-  .card::before {
-    content:'';
-    position:absolute;
-    top:0;left:0;right:0;bottom:0;
-    transform:translateZ(0);
-    -webkit-transform:translateZ(0);
   }
   
   @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
@@ -92,8 +143,8 @@
   .btn{
     display:inline-block;
     margin-top:1.5rem;
-    padding:.9rem 2.2rem;
-    font-size:clamp(1rem,2.5vw,1.1rem);
+    padding:clamp(0.8rem, 3vw, 0.9rem) clamp(1.8rem, 5vw, 2.2rem);
+    font-size:clamp(1rem, 3vw, 1.1rem);
     font-weight:600;
     color:#fff;
     background:#111;
@@ -109,11 +160,11 @@
     min-height:44px;
     min-width:120px;
     border:none;
-    transition:background-color .3s ease;
+    transition:background-color .3s ease, transform .1s ease;
   }
   
   .btn:hover{background-color:#333}
-  .btn:active{background-color:#000}
+  .btn:active{background-color:#000;transform:scale(0.95)}
   
   .btn::after{
     content:"";
@@ -127,33 +178,6 @@
   }
   
   .btn:hover::after{transform:scale(1);opacity:.2}
-  
-  .btn:active{
-    animation:pop .4s var(--ease);
-  }
-  
-  @keyframes pop{
-    50%{transform:scale(1.1)}
-    100%{transform:scale(1);opacity:1}
-  }
-  
-  /* High DPI display optimizations */
-  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .card {
-      image-rendering:-webkit-optimize-contrast;
-      image-rendering:crisp-edges;
-    }
-  }
-  
-  /* Landscape mobile mode */
-  @media (max-height: 500px) and (orientation: landscape) {
-    .cards-container {
-      gap:1rem;
-      margin:1rem auto;
-    }
-    h1{font-size:clamp(1.5rem,4vw,2.5rem)}
-    p{margin:.3em 0 .8em}
-  }
   
   /* Reduced motion accessibility */
   @media (prefers-reduced-motion: reduce) {
@@ -175,15 +199,9 @@
   <p>Pure HTML/CSS, 60 fps, zero judder</p>
   
   <div class="cards-container">
-    <div class="card-wrap">
-      <div class="card" data-index="0"></div>
-    </div>
-    <div class="card-wrap">
-      <div class="card" data-index="1"></div>
-    </div>
-    <div class="card-wrap">
-      <div class="card" data-index="2"></div>
-    </div>
+    <div class="card-wrap"><div class="card" data-index="0"></div></div>
+    <div class="card-wrap"><div class="card" data-index="1"></div></div>
+    <div class="card-wrap"><div class="card" data-index="2"></div></div>
   </div>
   
   <button class="btn">Tap me</button>
@@ -193,11 +211,8 @@
   document.addEventListener('DOMContentLoaded', function() {
     const button = document.querySelector('.btn');
     const cards = document.querySelectorAll('.card');
-    
-    // Updated image pool: three distinct bianca files
     const images = ['bianca1.jpeg', 'bianca2.jpeg', 'bianca3.jpeg'];
     
-    // Fisher-Yates shuffle
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -206,12 +221,12 @@
       return array;
     }
     
-    // Initialize with first set
+    // Initialize
     cards.forEach((card, index) => {
       card.style.backgroundImage = `url("${images[index]}")`;
     });
     
-    // Handle click/touch with debouncing
+    // Click handler with debouncing
     let isProcessing = false;
     button.addEventListener('click', function() {
       if (isProcessing) return;
@@ -221,23 +236,13 @@
       const shuffled = shuffle([...images]);
       
       cards.forEach((card, index) => {
-        // Fade transition for smooth swap
         card.style.opacity = '0';
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            card.style.backgroundImage = `url("${shuffled[index]}")`;
-            card.style.opacity = '1';
-          }, 150);
-        });
+        setTimeout(() => {
+          card.style.backgroundImage = `url("${shuffled[index]}")`;
+          card.style.opacity = '1';
+        }, 150);
       });
     });
-    
-    // iOS Safari momentum scroll fix
-    document.addEventListener('touchmove', function(e) {
-      if (e.target.closest('.card-wrap')) {
-        e.preventDefault();
-      }
-    }, {passive: false});
   });
 </script>
 </body>
